@@ -3,8 +3,10 @@ services:
   bento-backend:
     container_name: backend
     build:
-      context: .
-      dockerfile: ./dockerfiles/${BUILD_MODE}/backend
+      #context: .
+      context: ${BACKEND_SOURCE_FOLDER}
+      #dockerfile: ./dockerfiles/${BUILD_MODE}/backend
+      dockerfile: Dockerfile
       args:
         FRONTEND_SOURCE_FOLDER: ${FRONTEND_SOURCE_FOLDER}
         BACKEND_SOURCE_FOLDER: ${BACKEND_SOURCE_FOLDER}
@@ -20,12 +22,15 @@ services:
       - REDIS_ENABLE=false
       - REDIS_USE_CLUSTER=false
       - REDIS_HOST=""
+      - REDIS_PORT=9443
       - REDIS_FILTER_ENABLE=false
       - ES_HOST=${ES_HOST}
+      - ES_SIGN_REQUESTS=false
       - GRAPHQL_SCHEMA=graphql/bento-extended.graphql
       - GRAPHQL_ES_SCHEMA=graphql/bento-extended-private-es.graphql
       - GRAPHQL_PUBLIC_SCHEMA=graphql/bento-extended.graphql
       - GRAPHQL_PUBLIC_ES_SCHEMA=graphql/bento-extended-public-es.graphql
+      - MYSQL_SESSION_ENABLED=false
     networks:
       - default
     ports:
@@ -36,8 +41,11 @@ services:
     container_name: frontend
     platform: linux/amd64
     build:
-      context: .
+      #context: .
+      ##context: ${FRONTEND_SOURCE_FOLDER}
       dockerfile: ./dockerfiles/${BUILD_MODE}/frontend
+      #dockerfile: ./${FRONTEND_SOURCE_FOLDER}/Dockerfile
+      ##dockerfile: Dockerfile
       args:
         FRONTEND_SOURCE_FOLDER: ${FRONTEND_SOURCE_FOLDER}
         BACKEND_SOURCE_FOLDER: ${BACKEND_SOURCE_FOLDER}
@@ -56,10 +64,9 @@ services:
       - REACT_APP_AUTH_SERVICE_API=http://localhost/api/auth/
       - REACT_APP_USER_SERVICE_API=http://localhost/api/users/
       - REACT_APP_AUTH=false
-      - PUBLIC_ACCESS='Metadata Only'
+      - PUBLIC_ACCESS=Metadata Only
       - NODE_LEVEL_ACCESS=false
-      - NODE_LABEL='Study Arm(s)'
-
+      - NODE_LABEL=Study Arm(s)
     volumes:
       - ./${FRONTEND_SOURCE_FOLDER}:/usr/local/bento-frontend
       - /usr/local/bento-frontend/node_modules
@@ -71,7 +78,8 @@ services:
     networks:
       - default
     ports:
-      - 80:80
+      #- 80:80
+      - 3010:80
       - 8085:3010
     restart: always
 
@@ -98,6 +106,7 @@ services:
   bento-os:
     container_name: bento-os
     image: opensearchproject/opensearch:1.2.4
+    #image: opensearchproject/opensearch:2.14.0
     environment:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - network.bind_host=0.0.0.0
@@ -115,14 +124,22 @@ services:
 
   neo4j:
     container_name: neo4j
-    platform: linux/amd64
+    #platform: linux/amd64
     build:
-      context: .
+    #  context: .
       dockerfile: ./dockerfiles/${BUILD_MODE}/neo4j
+    #image: neo4j:4.4.19
+    hostname: neo4j
     environment:
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
       - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASS}
-      - NEO4J_PASS=${NEO4J_PASS}
+      #- NEO4J_PASS=${NEO4J_PASS}
+      #- NEO4J_AUTH=neo4j/pleaseletmein
+      - NEO4JLABS_PLUGINS=["apoc"]
+      - NEO4J_dbms_allow__upgrade=true
+      # - NEO4J_dbms_memory_heap_initial__size=1G
+      # - NEO4J_dbms_memory_heap_max__size=2G
+      # - NEO4J_dbms_memory_pagecache_size=1G
     volumes:
       - neo4j-data:/data
       - neo4j-logs:/logs
@@ -131,6 +148,23 @@ services:
     ports:
       - 7474:7474
       - 7687:7687
+
+  bento-dataloader-es:
+    container_name: dataloader-es
+    build:
+      context: .
+      #dockerfile: ./dataloader/Dockerfile_es
+      dockerfile: ./dockerfiles/${BUILD_MODE}/dataloader
+      args:
+        FRONTEND_SOURCE_FOLDER: ${FRONTEND_SOURCE_FOLDER}
+        BACKEND_SOURCE_FOLDER: ${BACKEND_SOURCE_FOLDER}
+        BENTO_DATA_MODEL: ${BENTO_DATA_MODEL}
+        NEO4J_USER: ${NEO4J_USER}
+        NEO4J_PASS: ${NEO4J_PASS}
+        NEO4J_HOST: ${NEO4J_HOST}
+        ES_HOST: ${ES_HOST}
+    networks:
+      - default
 
 volumes:
   neo4j-data:

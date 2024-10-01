@@ -1,20 +1,25 @@
 # Pull the base image from Neo4j
-FROM neo4j:4.2.14
+FROM neo4j:4.4.19
 
 # Get APOC
-ARG NEO4J_PLUGIN_DIR="/var/lib/neo4j/plugins"
-ARG APOC_VERSION=4.2.0.2-core
+# ARG NEO4J_PLUGIN_DIR="/var/lib/neo4j/plugins"
+# ARG APOC_VERSION=4.4.0.15-core
 
-RUN apt-get update \
- && apt-get install -y wget dos2unix
+# RUN apt-get update \
+#  && apt-get install -y wget dos2unix
 
-RUN echo "Copying APOC" \
- && cp /var/lib/neo4j/labs/apoc-*.jar /var/lib/neo4j/plugins/
+# RUN echo "Copying APOC" \
+#  && cp /var/lib/neo4j/labs/apoc-*.jar /var/lib/neo4j/plugins/
 
 ### Copy required files and scripts for seeding data
-COPY dockerfiles/scripts/wrapper.sh data/bento-data.dum[p] ./
-RUN dos2unix wrapper.sh \
- && chown root:root wrapper.sh \
- && chmod +x wrapper.sh
+# COPY dockerfiles/scripts/wrapper.sh data/bento-data.dum[p] ./
+COPY data/bento-data.dum[p] ./
 
-ENTRYPOINT ["./wrapper.sh"]
+# RUN cp /etc/neo4j.conf /etc/neo4j.conf.bak \
+#  && sed -i "s|dbms.allow_upgrade=false|dbms.allow_upgrade=true|g" /etc/neo4j.conf
+
+# RUN dos2unix wrapper.sh \
+#  && chown root:root wrapper.sh \
+#  && chmod +x wrapper.sh
+
+# ENTRYPOINT ["./wrapper.sh"]
