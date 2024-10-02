@@ -19,8 +19,9 @@ RUN apt-get update && apt-get install -y python3 python3-pip git npm
 
 # install supporting code and scripts
 RUN echo "cloning dataloader code" \
- && git clone --single-branch --branch master --recurse-submodules -j8 https://github.com/CBIIT/icdc-dataloader.git /usr/local/icdc_dataloader \
+ && git clone --single-branch --branch bento_local --recurse-submodules -j8 https://github.com/CBIIT/icdc-dataloader.git /usr/local/icdc_dataloader \
  && cd /usr/local/icdc_dataloader \
+ && pip3 install --upgrade pip \
  && pip3 install -r requirements.txt
 
 RUN apt-get update \
@@ -47,12 +48,8 @@ ENV ABOUT_FILE=/tmp/aboutPagesContent.yaml
 ENV PROPERTY_FILE=config/props-bento-ext.yml
 
 # copy and prepare the frontend code
-RUN mkdir /usr/local/bento-frontend
-
 WORKDIR /usr/local/bento-frontend
-
-#RUN npm install
 
 EXPOSE 3010
 
-ENTRYPOINT [ "/bin/sh", "-c", "/tmp/wait-for-it.sh -t 0 $ES_HOST:9200 -- /tmp/es-loader-ubuntu.sh && chown -R root:root /usr/local/bento-frontend && npm install && npx lerna run start" ]
+ENTRYPOINT [ "/bin/sh", "-c", "/tmp/wait-for-it.sh -t 0 $ES_HOST:9200 -- /tmp/es-loader-ubuntu.sh && npm install && npx lerna run start" ]

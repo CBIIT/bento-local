@@ -1,9 +1,5 @@
 # Pull the base image from Neo4j
-FROM neo4j:4.2.14
-
-# Get APOC
-ARG NEO4J_PLUGIN_DIR="/var/lib/neo4j/plugins"
-ARG APOC_VERSION=4.2.0.2-core
+FROM neo4j/neo4j-arm64-experimental:4.2.19-arm64
 
 RUN apt-get update \
  && apt-get install -y wget dos2unix

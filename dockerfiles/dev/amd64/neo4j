@@ -1,0 +1,16 @@
+# Pull the base image from Neo4j
+FROM neo4j:4.2.19
+
+RUN apt-get update \
+ && apt-get install -y wget dos2unix
+
+RUN echo "Copying APOC" \
+ && cp /var/lib/neo4j/labs/apoc-*.jar /var/lib/neo4j/plugins/
+
+### Copy required files and scripts for seeding data
+COPY dockerfiles/scripts/wrapper.sh data/bento-data.dum[p] ./
+RUN dos2unix wrapper.sh \
+ && chown root:root wrapper.sh \
+ && chmod +x wrapper.sh
+
+ENTRYPOINT ["./wrapper.sh"]

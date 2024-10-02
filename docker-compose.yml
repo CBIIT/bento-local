@@ -34,7 +34,7 @@ services:
 
   bento-frontend:
     container_name: frontend
-    platform: linux/amd64
+    user: root
     build:
       context: .
       dockerfile: ./dockerfiles/${BUILD_MODE}/frontend
@@ -115,10 +115,9 @@ services:
 
   neo4j:
     container_name: neo4j
-    platform: linux/amd64
     build:
       context: .
-      dockerfile: ./dockerfiles/${BUILD_MODE}/neo4j
+      dockerfile: ./dockerfiles/${BUILD_MODE}/${OS_ARCH}/neo4j
     environment:
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
       - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASS}

@@ -7,9 +7,10 @@ RUN apt-get update \
  && apt-get install -y python3 python3-pip git curl
 
 RUN echo "cloning dataloader code" \
- && git clone --single-branch --branch master --recurse-submodules -j8 https://github.com/CBIIT/icdc-dataloader.git /usr/local/icdc_dataloader \
+ && git clone --single-branch --branch bento_local --recurse-submodules -j8 https://github.com/CBIIT/icdc-dataloader.git /usr/local/icdc_dataloader \
  && cd /usr/local/icdc_dataloader \
- && pip3 install -r requirements.txt
+ && python3 -m pip config set global.break-system-packages true \
+  && pip3 install -r requirements.txt
 
 # Data loading phase
 FROM base AS load_data
