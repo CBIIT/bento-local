@@ -29,18 +29,24 @@ RUN mkdir -p "$CATALINA_HOME" \
 
 #### Install Maven
 ARG MAVEN_VERSION=3.8.8
-ARG USER_HOME_DIR="/root"
-ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
-RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
-  && echo "Downlaoding maven" \
-  && wget -O /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
-  \
-  && echo "Unziping maven" \
-  && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
-  \
-  && echo "Cleaning and setting links" \
-  && rm -f /tmp/apache-maven.tar.gz \
-  && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+ARG MAVEN_BASE=https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries
+
+RUN set -eux; \
+  apk add --no-cache ca-certificates wget tar; \
+  mkdir -p /usr/share/maven /usr/share/maven/ref; \
+  echo "Downloading Maven ${MAVEN_VERSION}"; \
+  wget -O /tmp/maven.tgz \
+    "${MAVEN_BASE}/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
+  wget -O /tmp/maven.tgz.sha512 \
+    "${MAVEN_BASE}/apache-maven-${MAVEN_VERSION}-bin.tar.gz.sha512"; \
+  # The .sha512 file is just the hash. Convert it to 'HASH  /tmp/maven.tgz' for -c.
+  HASH="$(awk '{print $1}' /tmp/maven.tgz.sha512)"; \
+  echo "${HASH}  /tmp/maven.tgz" | sha512sum -c -; \
+  echo "Unzipping Maven"; \
+  tar -xzf /tmp/maven.tgz -C /usr/share/maven --strip-components=1; \
+  echo "Cleaning and setting links"; \
+  rm -f /tmp/maven.tgz /tmp/maven.tgz.sha512; \
+  ln -sf /usr/share/maven/bin/mvn /usr/bin/mvn
 
 # Define environmental variables required by Maven, like Maven_Home directory and where the maven repo is located
 ENV MAVEN_HOME /usr/share/maven

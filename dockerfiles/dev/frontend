@@ -1,4 +1,5 @@
 FROM node:16.20.0-buster-slim
+# FROM node:16.20.2-buster-slim
 MAINTAINER ESI Devops Team
 
 # set local vars
@@ -13,6 +14,19 @@ ARG NEO4J_HOST
 ENV NEO4J_HOST=${NEO4J_HOST}
 ARG ES_HOST
 ENV ES_HOST=${ES_HOST}
+
+# Point APT to the Debian Archive (buster is EOL) and disable Valid-Until
+RUN set -eux; \
+  if [ -f /etc/apt/sources.list ]; then \
+    sed -i -e 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' \
+           -e 's|http://security.debian.org|http://archive.debian.org/debian-archive/debian-security|g' \
+           /etc/apt/sources.list; \
+  fi; \
+  find /etc/apt/sources.list.d -name '*.list' -print0 2>/dev/null | xargs -0 -r sed -i \
+    -e 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' \
+    -e 's|http://security.debian.org|http://archive.debian.org/debian-archive/debian-security|g'; \
+  printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99no-check-valid; \
+  apt-get -o Acquire::Check-Valid-Until=false update
 
 # install dependencies
 RUN apt-get update && apt-get install -y python3 python3-pip git npm
